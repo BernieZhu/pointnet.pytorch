@@ -10,3 +10,6 @@ seg/
 *.egg-info/
 wandb/
 .DS_Store
+cube_data/
+ckpts/
+vscode/
