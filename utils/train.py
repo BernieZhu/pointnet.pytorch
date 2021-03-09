@@ -100,10 +100,16 @@ for epoch in range(opt.nepoch):
 
         total_global, control_type_pred, init_pose_pred, final_pose_pred, control_para_pred, trans_feat1, trans_feat2 = P2Control(init_points, final_points)
 
-        vis_img = torch.mean(total_global,axis = 0)[:1024].cpu()
-        vis_img = vis_img.detach().numpy().reshape(32,32,1)
-        v_max, v_min = np.max(vis_img), np.min(vis_img)
-        vis_img =  (255*(vis_img - v_min) / (v_max - v_min)).astype(np.uint8)
+        vis_img1 = torch.mean(total_global,axis = 0)[:1024].cpu()
+        vis_img1 = vis_img1.detach().numpy().reshape(32,32,1)
+        v_max, v_min = np.max(vis_img1), np.min(vis_img1)
+        vis_img1 =  (255*(vis_img1 - v_min) / (v_max - v_min)).astype(np.uint8)
+
+
+        vis_img2 = torch.mean(total_global,axis = 0)[1024:].cpu()
+        vis_img2 = vis_img2.detach().numpy().reshape(32,32,1)
+        v_max, v_min = np.max(vis_img2), np.min(vis_img2)
+        vis_img2 =  (255*(vis_img2 - v_min) / (v_max - v_min)).astype(np.uint8)
 
         #print(pred.size(), target.size())
 
@@ -140,7 +146,8 @@ for epoch in range(opt.nepoch):
             "Train Init_pose_pred_loss" : init_pose_pred_loss.item(),
             "Train Final_pose_pred_loss" : final_pose_pred_loss.item(),
             "Train Control_para_pred_loss" : control_para_pred_loss.item(),
-            "Global Feature": [wandb.Image(vis_img, caption="Feature")],
+            "Global Feature1": [wandb.Image(vis_img1, caption="Feature")],
+            "Global Feature2": [wandb.Image(vis_img2, caption="Feature")],
             })
 
 
