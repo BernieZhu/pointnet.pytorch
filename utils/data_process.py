@@ -1,56 +1,59 @@
-import numpy as np
 import os
 import sys
+import numpy as np
 import open3d as o3d
 import pickle
 
-def renamePickle(pickle_list):
-    for i in (pickle_list):
-        old_path = os.path.join(pickle_dir, i)
-        segment = i[:-7].split("_", 3)
-        new_name = "{:0>5d}_{}_{:0>5d}.pickle".format(int(segment[1]), segment[2], int(segment[3]))
-        new_path = os.path.join(pickle_dir, new_name)
-        os.system( "mv {} {}".format(old_path, new_path))
-
-def renamePts(pts_list):
-    for i in (pts_list):
-        old_path = os.path.join(pts_dir, i)
-        segment = i[:-4].split("_", 3)
-        new_name = "{:0>5d}_{}_{:0>5d}.pts".format(int(segment[1]), segment[2], int(segment[3]))
-        new_path = os.path.join(pts_dir, new_name)
-        os.system( "mv {} {}".format(old_path, new_path))
-
-def movePickle(path):
-    i = 0
-    pts1 = 0
-    pts2 = 0
-    while (pts1 <= 778): 
-        n = "{:0>5d}".format(i)
-        new_folder = os.path.join(path, "train", n)
-        os.system("mkdir {}".format(new_folder))
-        i += 1
-        pts1 = pts2 + 1
-        pts2 = pts1 + 1
-        # os.system( "ls *{:0>5d}.pts *{:0>5d}.pts".format(pts1, pts2))
-        os.system( "mv *{:0>5d}.pts *{:0>5d}.pts {}".format(pts1, pts2, new_folder))
-
-def movePts(path):
-    i = 1
-    while (i <= 390): 
-        n = "{:0>5d}".format(i)
-        f = "{:0>5d}".format(i-1)
-        new_folder = os.path.join(path, "train", f)
-        os.system( "mv *{}.pickle {}".format(n, new_folder))
-        i += 1
-
-if __name__ == '__main__':
-    path = "/home/sirdome/Documents/HaoZhu/data"
-    pts_dir = os.path.join(path, "points")
-    pickle_dir = os.path.join(path, "states")
-    pts_list = os.listdir(pts_dir)
-    pickle_list = os.listdir(pickle_dir)
+class Dataset(object):
+    def __init__(self, split, path, start, end):
+        self.split = split
+        self.All = []
+        self.subset = []
+        for i in range(start, end+1):
+            self.subset.append(os.path.join(path, "data_{}".format(i)))
+        # print(self.split, self.subset)
     
-    renamePickle(pickle_list)
-    renamePts(pts_list)
-    movePickle(path)
-    movePts(path)
+    def __len__(self):
+        return len(self.All)
+
+    def index(self):
+        for i in self.subset:
+            pts_list = sorted(os.listdir(os.path.join(i, 'points')), key=lambda x: (int(x[:-4].split('_')[3])))
+            pickle_list = sorted(os.listdir(os.path.join(i, 'states')), key=lambda x: (int(x[:-7].split('_')[3])))
+            npy_list = sorted(os.listdir(os.path.join(i, 'label')), key=lambda x: (int(x[:-4].split('_')[1])))
+            # print(pts_list[0],pts_list[-1])
+            # print(pickle_list[0],pickle_list[-1])
+            # print(npy_list[0],npy_list[-1])
+            
+            for j in range( len(pickle_list) ):
+                item = {}
+                item['pts'] = [ pts_list[j*2], pts_list[j*2+1] ]
+                item['pickle'] = pickle_list[j]
+                item['npy'] = npy_list[ int(pickle_list[j].split('_')[1]) ]
+                succ = np.load(os.path.join(i, 'label', item['npy']))[0]
+                if (succ == 0):
+                    continue
+                else:
+                    abs_item={}
+                    abs_item['pts'] = [ os.path.join(i, 'points', item['pts'][0]), os.path.join(i, 'points', item['pts'][1]) ]
+                    abs_item['pickle'] = os.path.join(i, 'states', item['pickle'])
+                    abs_item['npy'] = os.path.join(i, 'label', item['npy'])
+                    self.All.append(abs_item)
+
+    def save(self):
+        for i in range(len(self)):
+            folder = os.path.join(path, 'data_Mar13', self.split, str(i))
+            os.system( 'mkdir -vp {}'.format(folder))
+            os.system( 'cp {} {} {}'.format(self.All[i]['pts'][0], self.All[i]['pts'][1], folder) )
+            os.system( 'cp {} {}'.format(self.All[i]['pickle'], folder) )
+            os.system( 'cp {} {}'.format(self.All[i]['npy'], folder) )
+
+if __name__ == "__main__":
+    path = '/home/sirdome/Documents/HaoZhu'
+    Train = Dataset('train', path, 0, 8)
+    Train.index()
+    Train.save()
+
+    Test = Dataset('test', path, 9, 10)
+    Test.index()
+    Test.save()
