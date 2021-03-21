@@ -13,7 +13,7 @@ from tqdm import tqdm
 import numpy as np
 import wandb
 
-wandb.init(name='{}'.format("train_small_data"),
+wandb.init(name='{}'.format("train_overfit_type_loss"),
             project="point2control", entity="katefgroup",
            tags=['train_on_small_dataset'],
            job_type='train')
@@ -21,7 +21,7 @@ wandb.init(name='{}'.format("train_small_data"),
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    '--batchSize', type=int, default=32, help='input batch size')
+    '--batchSize', type=int, default=16, help='input batch size')
 parser.add_argument(
     '--workers', type=int, help='number of data loading workers', default=4)
 parser.add_argument(
@@ -86,6 +86,7 @@ for epoch in range(opt.nepoch):
         init_points, final_points, control_type, control_para, init_pose, final_pose = data
         init_points = init_points.transpose(2, 1)
         final_points = final_points.transpose(2, 1)
+
         init_pose = init_pose[:,-3:]
         final_pose = final_pose[:,-3:]
 
@@ -116,7 +117,7 @@ for epoch in range(opt.nepoch):
         total_loss = 0
         # control_type loss
         control_type_loss = F.nll_loss(control_type_pred, torch.squeeze(control_type.type(torch.long)))
-        total_loss += control_type_loss
+        total_loss += control_type_loss * 3
         # transfrom loss
         if opt.feature_transform:
             total_loss += feature_transform_regularizer(trans_feat1.cpu()).cuda() * 0.001
@@ -129,7 +130,7 @@ for epoch in range(opt.nepoch):
         final_pose_pred_loss = F.mse_loss(final_pose_pred, final_pose) * 0.1
         total_loss += final_pose_pred_loss
         # mse for control_para_pred
-        control_para_pred_loss = F.mse_loss(control_para_pred, control_para) * 5
+        control_para_pred_loss = F.mse_loss(control_para_pred, control_para) * 4
         total_loss += control_para_pred_loss
 
 
@@ -171,21 +172,21 @@ for epoch in range(opt.nepoch):
             test_total_loss = 0
             # control_type loss
             control_type_loss = F.nll_loss(control_type_pred, torch.squeeze(control_type.type(torch.long)))
-            test_total_loss += control_type_loss
+            test_total_loss += control_type_loss * 3
             # transfrom loss
             if opt.feature_transform:
                 test_total_loss += feature_transform_regularizer(trans_feat1.cpu()).cuda() * 0.001
                 test_total_loss += feature_transform_regularizer(trans_feat2.cpu()).cuda() * 0.001
 
             # mse for init_pose_pred
-            init_pose_pred_loss = F.mse_loss(init_pose_pred, init_pose) * 0.1
+            init_pose_pred_loss = F.mse_loss(init_pose_pred, init_pose) * 0.5
             test_total_loss += init_pose_pred_loss
             # mse for final_pose_pred
-            final_pose_pred_loss = F.mse_loss(final_pose_pred, final_pose) * 0.1
+            final_pose_pred_loss = F.mse_loss(final_pose_pred, final_pose) * 0.5
             test_total_loss += final_pose_pred_loss
             # mse for control_para_pred
             control_para_pred_loss = F.mse_loss(control_para_pred, control_para)
-            test_total_loss += control_para_pred_loss
+            test_total_loss += control_para_pred_loss * 4
 
 
             pred_choice = control_type_pred.data.max(1)[1]

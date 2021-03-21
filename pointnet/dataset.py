@@ -29,17 +29,23 @@ class ShapeNetDataset(data.Dataset):
         self.folder = os.path.join(self.datapath)
 
     def __getitem__(self, index):
-        #### TODO
-        if self.split == "test":
-            index += 351
-        datapath = os.path.join("/home/sirdome/Documents/HaoZhu/cube_data", self.split)
-        folder = os.path.join(datapath, "{:0>5d}".format(index))
+        datapath = os.path.join("/home/sirdome/Documents/HaoZhu/data_Mar13", self.split)
+        folder = os.path.join(datapath, str(index))
         files = sorted(os.listdir(folder))
 
-        f_o = open(os.path.join(folder, files[0]), 'rb')
+        pcd = []
+
+        for i in sorted(files):
+            if i[-6:] == 'pickle':
+                label = i
+            elif i[-3:] == 'npy':
+                npy = i
+            elif i[-3:] == 'pts':
+                pcd.append(i)
+        f_o = open(os.path.join(folder, label), 'rb')
         dic = pickle.load(f_o)
-        pcd_1 = o3d.io.read_point_cloud(os.path.join(folder,files[1]))
-        pcd_2 = o3d.io.read_point_cloud(os.path.join(folder,files[2]))
+        pcd_1 = o3d.io.read_point_cloud(os.path.join(folder, sorted(pcd)[0]))
+        pcd_2 = o3d.io.read_point_cloud(os.path.join(folder, sorted(pcd)[1]))
 
         pcd_1 = np.asarray(pcd_1.points)
         choice = np.random.choice(len(pcd_1), self.npoints, replace=True)

@@ -369,16 +369,16 @@ if __name__ == '__main__':
     # out, _, _ = pointfeat(sim_data)
     # print('point feat', out.size())
 
-    # cls = PointNetCls(k = 5)
-    # out, _, _ = cls(sim_data)
-    # print('class', out.size())
+    cls = PointNetCls(k = 5)
+    out, _, _ = cls(sim_data)
+    print('class', out.size())
 
-    # seg = PointNetDenseCls(k = 3)
-    # out, _, _ = seg(sim_data)
-    # print('seg', out.size())
-    seg = PointNetPlus(k = 2)
-    total_global, y_type, init_pose, final_pose, control_para, trans_feat1, trans_feat2 = seg(sim_data, sim_data)
-    print(total_global.shape, y_type.shape, init_pose.shape, final_pose.shape, control_para.shape)
+    seg = PointNetDenseCls(k = 3)
+    out, _, _ = seg(sim_data)
+    print('seg', out.size())
+    # seg = PointNetPlus(k = 2)
+    # total_global, y_type, init_pose, final_pose, control_para, trans_feat1, trans_feat2 = seg(sim_data, sim_data)
+    # print(total_global.shape, y_type.shape, init_pose.shape, final_pose.shape, control_para.shape)
 
 
 
