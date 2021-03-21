@@ -39,12 +39,8 @@ class Dataset(object):
                     abs_item['pickle'] = os.path.join(i, 'states', item['pickle'])
                     abs_item['npy'] = os.path.join(i, 'label', item['npy'])
                     self.All.append(abs_item)
-            # print('max_pickle', len(pickle_list), 'max_pts', len(pts_list))
-            # print(self.All[0], "\n", self.All[-1])
-            # print(len(self))
 
     def save(self):
-        # print('Save at{}'.format(os.path.join(path)))
         for i in range(len(self)):
             folder = os.path.join(path, 'data_Mar13', self.split, str(i))
             os.system( 'mkdir -vp {}'.format(folder))
